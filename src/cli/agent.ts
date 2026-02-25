@@ -12,6 +12,7 @@
  */
 
 import type { CompactionEngine } from '../core/compaction.js';
+import type { ConsentManager } from '../core/consent.js';
 import type { EmbeddingProvider } from '../sidecar/embeddings.js';
 import type { GraphEngine } from '../core/graph.js';
 import type { MemorydConfig } from '../config.js';
@@ -52,6 +53,21 @@ export type ConnectOptions = {
   config? : MemorydConfig;
 };
 
+/**
+ * Loose audit-typed interface — matches the shape expected by
+ * `registerMemoryTools()` and `registerTaskTools()` without importing
+ * full protocol generics.
+ */
+export type AuditTyped = {
+  configure: () => Promise<unknown>;
+  records: {
+    create: (type: string, opts: {
+      data : Record<string, unknown>;
+      tags : Record<string, string>;
+    }) => Promise<unknown>;
+  };
+};
+
 /** Context returned by `connectAgent()` — provides stores and engines. */
 export type AgentContext = {
   did : string;
@@ -59,6 +75,8 @@ export type AgentContext = {
   memoryStore : MemoryStore;
   taskStore : TaskStore;
   graphEngine : GraphEngine;
+  auditTyped? : AuditTyped;
+  consentManager? : ConsentManager;
   sidecarDb? : SidecarDatabase;
   searchIndex? : SearchIndex;
   embeddings? : EmbeddingProvider;
@@ -152,13 +170,20 @@ export async function connectAgent(options: ConnectOptions): Promise<AgentContex
   const { MemoryStore: MS } = await import('../core/memory-store.js');
   const { TaskStore: TS } = await import('../core/task-store.js');
   const { GraphEngine: GE } = await import('../core/graph.js');
+  const { AuditProtocol } = await import('../protocols/audit.js');
+  const { ConsentManager: CM } = await import('../core/consent.js');
 
   const memoryStore = new MS(web5);
   const taskStore = new TS(web5);
   const graphEngine = new GE(taskStore);
+  const auditTyped = web5.using(AuditProtocol) as unknown as AuditTyped;
+  const consentManager = new CM(web5);
 
   // Build the base context.
-  const ctx: AgentContext = { did, web5, memoryStore, taskStore, graphEngine, recoveryPhrase };
+  const ctx: AgentContext = {
+    did, web5, memoryStore, taskStore, graphEngine,
+    auditTyped, consentManager, recoveryPhrase,
+  };
 
   // Optionally bootstrap the sidecar search index.
   if (!options.skipSidecar) {

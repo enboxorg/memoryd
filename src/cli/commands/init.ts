@@ -13,6 +13,11 @@ export async function initCommand(ctx: AgentContext, _args: string[]): Promise<v
   await ctx.memoryStore.listFacts(undefined, { limit: 1 });
   await ctx.taskStore.listTasks(undefined, { limit: 1 });
 
+  // Configure the audit protocol so action logs can be written.
+  if (ctx.auditTyped) {
+    await ctx.auditTyped.configure();
+  }
+
   console.log('Protocols configured successfully.');
 
   // Ensure sidecar is bootstrapped (may already be from connectAgent).

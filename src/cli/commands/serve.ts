@@ -17,9 +17,14 @@ export async function serveCommand(ctx: AgentContext, args: string[]): Promise<v
   const port = parsePort(flagValue(args, '--port'), 3200);
   const server = new MemorydServer({ port });
 
+  // Configure audit protocol so action logs can be written during serve.
+  if (ctx.auditTyped) {
+    await ctx.auditTyped.configure();
+  }
+
   // Register all tools, resources, and prompts.
-  registerMemoryTools(server, ctx.memoryStore, ctx.searchIndex, undefined, ctx.compaction);
-  registerTaskTools(server, ctx.taskStore, ctx.graphEngine);
+  registerMemoryTools(server, ctx.memoryStore, ctx.searchIndex, ctx.auditTyped, ctx.compaction);
+  registerTaskTools(server, ctx.taskStore, ctx.graphEngine, ctx.auditTyped);
   registerMemoryResources(server, ctx.memoryStore);
   registerTaskResources(server, ctx.taskStore, ctx.graphEngine);
   registerContextPrompt(server, ctx.memoryStore);

@@ -9,9 +9,12 @@ export async function revokeCommand(ctx: AgentContext, args: string[]): Promise<
     process.exit(1);
   }
 
-  const { ConsentManager } = await import('../../core/consent.js');
-  const manager = new ConsentManager(ctx.web5);
-  const revoked = await manager.revokeAgent(agentDid);
+  if (!ctx.consentManager) {
+    console.error('Consent manager not available.');
+    process.exit(1);
+  }
+
+  const revoked = await ctx.consentManager.revokeAgent(agentDid);
 
   if (revoked) {
     console.log(`Agent ${agentDid} revoked successfully.`);
