@@ -9,3 +9,16 @@ export type { DependencyData, NoteData, StatusChangeData, TaskData } from './pro
 
 export { AuditProtocol } from './protocols/audit.js';
 export type { ActionLogData } from './protocols/audit.js';
+
+export { MemoryStore } from './core/memory-store.js';
+export type {
+  FactFilters,
+  FactRecord,
+  ListResult,
+  PaginationOptions,
+  PreferenceFilters,
+  PreferenceRecord,
+  RecordResult,
+  RelationshipFilters,
+  RelationshipRecord,
+} from './core/memory-store.js';
