@@ -41,7 +41,7 @@ Commands:
 
   revoke <agent-did>            Revoke agent consent
   compact                       Compact memory store
-  audit                         Show audit log
+  audit [agent-did] [--limit N] Show audit log (default: self, last 25)
 
 Options:
   --help, -h     Show help
@@ -181,7 +181,32 @@ async function main(): Promise<void> {
       break;
     }
     case 'audit': {
-      console.log('Audit log viewer is not yet implemented.');
+      if (!ctx.consentManager) {
+        console.error('Consent manager not available.');
+        process.exit(1);
+      }
+      const agentFilter = rest.find(a => !a.startsWith('--'));
+      const limitStr = flagValue(rest, '--limit');
+      const limit = limitStr ? parseInt(limitStr, 10) : 25;
+
+      const entries = await ctx.consentManager.getAgentAuditLog(
+        agentFilter ?? 'self', limit,
+      );
+
+      if (entries.length === 0) {
+        console.log('No audit log entries found.');
+        break;
+      }
+
+      if (json) {
+        console.log(JSON.stringify(entries, null, 2));
+      } else {
+        for (const entry of entries) {
+          const date = new Date(entry.dateCreated).toLocaleString();
+          console.log(`[${date}] ${entry.tags.action} — ${entry.data.description ?? '(no description)'}`);
+          console.log(`  protocol: ${entry.tags.targetProtocol}  record: ${entry.tags.targetRecordId}  status: ${entry.tags.status}`);
+        }
+      }
       break;
     }
     case 'whoami': {
