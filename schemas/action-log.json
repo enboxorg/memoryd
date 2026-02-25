@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://enbox.org/schemas/memory-audit/action-log",
+  "type": "object",
+  "properties": {
+    "description": { "type": "string", "description": "Human-readable description of the action" },
+    "details": { "type": "object", "description": "Additional action-specific details" }
+  },
+  "additionalProperties": false
+}
