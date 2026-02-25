@@ -27,6 +27,7 @@ Commands:
   task dep add <child> <parent> Add dependency
   task note <id> <content>      Add a note
 
+  revoke <agent-did>            Revoke agent consent
   compact                       Compact memory store
   audit                         Show audit log
 
@@ -88,6 +89,11 @@ async function main(): Promise<void> {
     }
     case 'compact': {
       console.log('Memory compaction is not yet implemented. See Issue #15.');
+      break;
+    }
+    case 'revoke': {
+      const { revokeCommand } = await import('./commands/revoke.js');
+      await revokeCommand(ctx, rest);
       break;
     }
     case 'audit': {

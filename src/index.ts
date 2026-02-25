@@ -38,6 +38,9 @@ export type {
 export { GraphEngine } from './core/graph.js';
 export type { TaskTreeNode } from './core/graph.js';
 
+export { ConsentManager } from './core/consent.js';
+export type { AgentRecord, AgentRegistration, AgentScope, AuditLogRecord } from './core/consent.js';
+
 export type { EmbeddingConfig, EmbeddingProvider } from './sidecar/embeddings.js';
 export { createEmbeddingProvider, NoopProvider, OllamaProvider, OpenAIProvider } from './sidecar/embeddings.js';
 
