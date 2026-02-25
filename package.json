@@ -1,6 +1,6 @@
 {
   "name": "@enbox/memoryd",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "User-owned AI memory layer with task graph, built on DWN protocols. MCP server.",
   "type": "module",
   "main": "./dist/esm/index.js",
