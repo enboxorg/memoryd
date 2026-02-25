@@ -142,7 +142,7 @@ Compact the memory store by merging or pruning old entries.
 | `olderThan`  | string | no       | ISO 8601 date — compact records older than this |
 | `collection` | string | no       | Limit compaction to a specific collection       |
 
-**Note:** Not yet implemented (see Issue #15). Returns a status message.
+**When to use:** Periodically clean up old, superseded, or redundant memories. The engine archives stale superseded facts, merges near-duplicate facts (via vector similarity), and vacuums the sidecar database.
 
 ### Task tools
 

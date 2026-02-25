@@ -29,20 +29,24 @@ curl -fsSL https://memoryd.sh/install | bash
 ## Quick start
 
 ```bash
+# Create an identity (first time)
+memoryd auth login
+
 # Initialize memory protocols on your DWN
+memoryd init --password <your-password>
+
+# Start the MCP server (default port 3200)
+memoryd serve --password <your-password>
+
+# Or use the env var to avoid interactive prompts:
+export MEMORYD_PASSWORD=<your-password>
 memoryd init
-
-# Start the MCP server (HTTP/SSE, default port 3200)
 memoryd serve
+```
 
-# Add to your Claude Desktop config:
-# {
-#   "mcpServers": {
-#     "memoryd": {
-#       "url": "http://localhost:3200/mcp"
-#     }
-#   }
-# }
+Connect your MCP client (Claude Desktop, Cursor, etc.):
+```bash
+memoryd mcp install   # auto-detects and configures your client
 ```
 
 ## CLI
@@ -55,8 +59,8 @@ memoryd fact list --category coding
 memoryd fact search "development preferences"
 
 # Tasks (beads-compatible UX)
-memoryd task create "Implement auth module" -p p1 -t feature
-memoryd task create "Add JWT validation" -p p2 --parent <task-id>
+memoryd task create "Implement auth module" --priority p1 --type feature
+memoryd task create "Add JWT validation" --priority p2 --parent <task-id>
 memoryd task dep add <child-id> <parent-id>
 memoryd task ready                          # Tasks with no open blockers
 memoryd task update <id> --claim            # Atomic: set assignee + in_progress
@@ -64,7 +68,7 @@ memoryd task show <id>                      # Detail with deps, subtasks, histor
 memoryd task list --status open
 
 # Maintenance
-memoryd compact --older-than 30d            # Memory decay / summarization
+memoryd compact                              # Memory decay / summarization
 memoryd audit                               # Agent action log
 memoryd revoke <agent-did>                  # Revoke agent access
 ```
@@ -95,12 +99,6 @@ When connected as an MCP server, memoryd exposes these tools to AI agents:
 | `task_list` | Filtered task list |
 | `task_add_note` | Annotate a task |
 
-### Audit
-
-| Tool | Description |
-|---|---|
-| `memory_audit` | View agent action log |
-
 ## MCP Resources
 
 | URI | Description |
@@ -117,7 +115,7 @@ When connected as an MCP server, memoryd exposes these tools to AI agents:
                      MCP Clients
                  (Claude, Cursor, etc.)
                        |
-                  MCP Protocol (HTTP/SSE)
+                   MCP Protocol (stdio / HTTP)
                        |
                  +-----------+
                  |  memoryd  |
@@ -162,7 +160,7 @@ The DWN is the source of truth (encrypted, portable, synced). The local SQLite s
 - **sqlite-vec** for vector similarity search (KNN)
 - **FTS5** for full-text search
 - **Reciprocal rank fusion** merges results from both
-- Configurable embedding provider (local Ollama default, OpenAI optional)
+- Configurable embedding provider (noop default, Ollama or OpenAI optional)
 - Rebuildable from DWN records at any time — it's a cache, not a store
 
 ### Encryption model
@@ -231,22 +229,20 @@ export MEMORYD_EMBEDDING_DIMENSIONS=3072
 
 ## Configuration
 
-```jsonc
-// ~/.memoryd/config.json
-{
-  "server": {
-    "port": 3200
-  },
-  "embedding": {
-    "provider": "local",           // "local" | "ollama" | "openai" | "custom"
-    "model": "nomic-embed-text",
-    "dimensions": 768
-  },
-  "sidecar": {
-    "path": "~/.memoryd/index.db"
-  }
-}
-```
+All runtime settings are configured via environment variables:
+
+| Variable | Default | Description |
+|---|---|---|
+| `MEMORYD_PASSWORD` | — | Vault password (or use `--password` flag) |
+| `MEMORYD_EMBEDDING_PROVIDER` | `noop` | Embedding provider: `noop`, `ollama`, `openai` |
+| `MEMORYD_EMBEDDING_MODEL` | provider default | Embedding model name |
+| `MEMORYD_EMBEDDING_DIMENSIONS` | provider default | Embedding vector dimensions |
+| `MEMORYD_EMBEDDING_URL` | `http://localhost:11434` | Ollama endpoint URL |
+| `OPENAI_API_KEY` | — | OpenAI API key (when using `openai` provider) |
+| `MEMORYD_SIDECAR_PATH` | `~/.memoryd/index.db` | Path to the sidecar SQLite database |
+| `MEMORYD_DWN_ENDPOINT` | `https://enbox-dwn.fly.dev` | DWN service endpoint for new identities |
+| `MEMORYD_HOST` | `localhost` | HTTP server bind host |
+| `MEMORYD_PORT` | `3200` | HTTP server port |
 
 ## How this compares
 
@@ -272,11 +268,11 @@ memoryd installs three protocols on the user's DWN:
 ## Roadmap
 
 - [x] Design: personal memory + task graph + vector sidecar
-- [ ] v0.1: Protocol definitions, core stores, MCP server, CLI
-- [ ] v0.2: Vector sidecar with sqlite-vec, hybrid search
-- [ ] v0.3: Memory compaction, consent/revocation, audit UI
+- [x] v0.1: Protocol definitions, core stores, MCP server, CLI
+- [x] v0.2: Vector sidecar with sqlite-vec, hybrid search
+- [x] v0.3: Memory compaction, consent/revocation, audit logging
 - [ ] v1.0: Conversation memory layer (chat-derived memory extraction)
 
 ## Status
 
-Early development. See [issues](https://github.com/enboxorg/memoryd/issues) for the implementation plan.
+Research preview (v0.0.1). Core functionality is complete — protocols, stores, MCP server (12 tools, 5 resources, 2 prompts), CLI, hybrid search, audit logging, and consent management are all implemented and tested. See [issues](https://github.com/enboxorg/memoryd/issues) for remaining work.
