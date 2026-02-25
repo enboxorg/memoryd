@@ -198,10 +198,10 @@ describe('memory tools (MCP)', () => {
   });
 
   // -------------------------------------------------------------------------
-  // memory_compact — stub
+  // memory_compact — not configured (no compaction engine)
   // -------------------------------------------------------------------------
 
-  it('memory_compact returns not-yet-implemented message', async () => {
+  it('memory_compact returns not-configured when no compaction engine', async () => {
     const result = await client.callTool({
       name      : 'memory_compact',
       arguments : {},
@@ -209,8 +209,8 @@ describe('memory tools (MCP)', () => {
 
     expect(result.isError).toBeFalsy();
     const parsed = JSON.parse((result.content as { type: string; text: string }[])[0].text);
-    expect(parsed.status).toBe('not_implemented');
-    expect(parsed.message).toContain('not yet implemented');
+    expect(parsed.status).toBe('not_configured');
+    expect(parsed.message).toContain('not configured');
   });
 
   // -------------------------------------------------------------------------
