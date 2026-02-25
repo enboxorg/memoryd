@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://enbox.org/schemas/memory/fact",
+  "type": "object",
+  "properties": {
+    "content": { "type": "string", "description": "The fact content" },
+    "context": { "type": "string", "description": "Optional context or source information" }
+  },
+  "required": ["content"],
+  "additionalProperties": false
+}

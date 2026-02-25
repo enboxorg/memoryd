@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://enbox.org/schemas/memory/relationship",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string", "description": "Name of the person/entity" },
+    "notes": { "type": "string", "description": "Optional notes about the relationship" }
+  },
+  "required": ["name"],
+  "additionalProperties": false
+}

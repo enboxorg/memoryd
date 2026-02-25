@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://enbox.org/schemas/memory/collection",
+  "type": "object",
+  "properties": {
+    "description": { "type": "string", "description": "Description of the collection" }
+  },
+  "additionalProperties": false
+}
