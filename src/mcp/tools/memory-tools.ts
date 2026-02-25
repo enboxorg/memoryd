@@ -88,6 +88,16 @@ export function registerMemoryTools(
         confidence : args.confidence,
         collection : args.collection,
       });
+      // Index in sidecar for hybrid search.
+      if (searchIndex) {
+        await searchIndex.upsert({
+          recordId     : result.id,
+          protocolPath : 'memory/v1/fact',
+          content      : args.content,
+          category     : args.category,
+          collection   : args.collection,
+        });
+      }
       await writeAudit(auditTyped, 'memory_add_fact', `Added fact: ${args.content.substring(0, 50)}`, result.id);
       return jsonResult(result);
     } catch (err) {
@@ -111,6 +121,16 @@ export function registerMemoryTools(
       const result = await memoryStore.addPreference(args.content, args.domain, {
         collection: args.collection,
       });
+      // Index in sidecar for hybrid search.
+      if (searchIndex) {
+        await searchIndex.upsert({
+          recordId     : result.id,
+          protocolPath : 'memory/v1/preference',
+          content      : args.content,
+          category     : args.domain,
+          collection   : args.collection,
+        });
+      }
       await writeAudit(auditTyped, 'memory_add_preference', `Added preference: ${args.content.substring(0, 50)}`, result.id);
       return jsonResult(result);
     } catch (err) {
@@ -189,6 +209,15 @@ export function registerMemoryTools(
       const result = await memoryStore.supersedeFact(args.oldFactId, args.newContent, {
         reason: args.reason,
       });
+      // Update sidecar: remove old record, index the new one.
+      if (searchIndex) {
+        searchIndex.remove(args.oldFactId);
+        await searchIndex.upsert({
+          recordId     : result.id,
+          protocolPath : 'memory/v1/fact',
+          content      : args.newContent,
+        });
+      }
       await writeAudit(
         auditTyped, 'memory_supersede',
         `Superseded fact ${args.oldFactId.substring(0, 20)}: ${args.newContent.substring(0, 30)}`,

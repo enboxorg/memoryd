@@ -40,6 +40,16 @@ export async function factCommand(ctx: AgentContext, args: string[], json: boole
         confidence: confStr ? Number(confStr) : undefined,
         collection,
       });
+      // Index in sidecar for hybrid search.
+      if (ctx.searchIndex) {
+        await ctx.searchIndex.upsert({
+          recordId     : result.id,
+          protocolPath : 'memory/v1/fact',
+          content,
+          category,
+          collection,
+        });
+      }
       if (json) {
         console.log(JSON.stringify(result, null, 2));
       } else {
@@ -76,18 +86,34 @@ export async function factCommand(ctx: AgentContext, args: string[], json: boole
         console.error('Usage: memoryd fact search <query>');
         process.exit(1);
       }
-      console.log('Note: Full hybrid search requires sidecar setup. Showing filtered results.');
-      const result = await ctx.memoryStore.listFacts();
-      const filtered = result.records.filter(
-        f => f.data.content.toLowerCase().includes(query.toLowerCase()),
-      );
-      if (json) {
-        console.log(JSON.stringify(filtered, null, 2));
-      } else if (filtered.length === 0) {
-        console.log('No matching facts found.');
+
+      if (ctx.searchIndex) {
+        // Hybrid vector + FTS search via sidecar.
+        const results = await ctx.searchIndex.search(query, { limit: 20 });
+        if (json) {
+          console.log(JSON.stringify(results, null, 2));
+        } else if (results.length === 0) {
+          console.log('No matching facts found.');
+        } else {
+          for (const r of results) {
+            console.log(`[${r.category ?? '—'}] ${r.content} (${r.recordId}) score=${r.score.toFixed(4)}`);
+          }
+        }
       } else {
-        for (const f of filtered) {
-          console.log(`[${f.tags.category}] ${f.data.content} (${f.id})`);
+        // Fallback: in-memory substring match.
+        console.log('Note: Full hybrid search requires sidecar. Showing filtered results.');
+        const result = await ctx.memoryStore.listFacts();
+        const filtered = result.records.filter(
+          f => f.data.content.toLowerCase().includes(query.toLowerCase()),
+        );
+        if (json) {
+          console.log(JSON.stringify(filtered, null, 2));
+        } else if (filtered.length === 0) {
+          console.log('No matching facts found.');
+        } else {
+          for (const f of filtered) {
+            console.log(`[${f.tags.category}] ${f.data.content} (${f.id})`);
+          }
         }
       }
       break;
