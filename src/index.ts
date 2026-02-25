@@ -6,3 +6,6 @@ export type { CollectionData, FactData, PreferenceData, RelationshipData, Supers
 
 export { TaskGraphProtocol } from './protocols/task-graph.js';
 export type { DependencyData, NoteData, StatusChangeData, TaskData } from './protocols/task-graph.js';
+
+export { AuditProtocol } from './protocols/audit.js';
+export type { ActionLogData } from './protocols/audit.js';
