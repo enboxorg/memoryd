@@ -34,3 +34,6 @@ export type {
   TaskRecord,
   TaskResult,
 } from './core/task-store.js';
+
+export { GraphEngine } from './core/graph.js';
+export type { TaskTreeNode } from './core/graph.js';
