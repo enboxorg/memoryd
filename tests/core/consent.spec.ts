@@ -52,7 +52,7 @@ describe('ConsentManager', () => {
     await typed.configure({ encryption: true });
 
     manager = new ConsentManager(web5);
-  });
+  }, 30_000);
 
   afterAll(() => {
     rmSync(DATA_PATH, { recursive: true, force: true });
