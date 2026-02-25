@@ -1,6 +1,7 @@
 // memoryd MCP tools — memory_add_fact, memory_add_preference, memory_search,
 // memory_supersede, memory_compact.
 
+import type { CompactionEngine } from '../../core/compaction.js';
 import type { MemorydServer } from '../server.js';
 import type { MemoryStore } from '../../core/memory-store.js';
 import type { SearchIndex } from '../../sidecar/search.js';
@@ -66,6 +67,7 @@ export function registerMemoryTools(
   memoryStore: MemoryStore,
   searchIndex?: SearchIndex,
   auditTyped?: AuditTyped,
+  compactionEngine?: CompactionEngine,
 ): void {
   // -----------------------------------------------------------------------
   // memory_add_fact
@@ -203,15 +205,28 @@ export function registerMemoryTools(
   // -----------------------------------------------------------------------
 
   server.mcp.registerTool('memory_compact', {
-    description : 'Compact the memory store by merging or pruning old entries. (Not yet implemented — see Issue #15.)',
+    description : 'Compact the memory store by archiving stale facts, merging near-duplicates, and vacuuming the sidecar.',
     inputSchema : {
-      olderThan  : z.string().optional().describe('ISO 8601 date — compact records older than this date.'),
-      collection : z.string().optional().describe('Limit compaction to a specific collection.'),
+      ageThresholdDays    : z.number().int().min(0).default(30).describe('Archive superseded facts older than this many days.'),
+      similarityThreshold : z.number().min(0).max(1).default(0.95).describe('Cosine similarity threshold for merging duplicates.'),
     },
-  }, async (_args) => {
-    return jsonResult({
-      status  : 'not_implemented',
-      message : 'Memory compaction is not yet implemented. See Issue #15.',
-    });
+  }, async (args) => {
+    try {
+      if (!compactionEngine) {
+        return jsonResult({ status: 'not_configured', message: 'Compaction engine not configured.' });
+      }
+      const result = await compactionEngine.compact({
+        ageThresholdDays    : args.ageThresholdDays,
+        similarityThreshold : args.similarityThreshold,
+      });
+      await writeAudit(
+        auditTyped, 'memory_compact',
+        `Compacted: archived=${result.archivedStale} merged=${result.mergedDuplicates} vacuumed=${result.vacuumed}`,
+        'compaction',
+      );
+      return jsonResult(result);
+    } catch (err) {
+      return errorResult(err);
+    }
   });
 }
