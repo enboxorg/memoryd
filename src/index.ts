@@ -40,3 +40,8 @@ export type { TaskTreeNode } from './core/graph.js';
 
 export type { EmbeddingConfig, EmbeddingProvider } from './sidecar/embeddings.js';
 export { createEmbeddingProvider, NoopProvider, OllamaProvider, OpenAIProvider } from './sidecar/embeddings.js';
+
+export { SidecarDatabase } from './sidecar/database.js';
+
+export { SearchIndex } from './sidecar/search.js';
+export type { IndexRecord, SearchFilters, SearchResult } from './sidecar/search.js';
