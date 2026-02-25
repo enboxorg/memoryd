@@ -27,6 +27,11 @@ describe('SidecarDatabase', () => {
     expect(sidecar.db).toBeDefined();
   });
 
+  it('exposes hasVectorSearch property', () => {
+    sidecar = new SidecarDatabase(':memory:');
+    expect(typeof sidecar.hasVectorSearch).toBe('boolean');
+  });
+
   it('creates all expected tables', () => {
     sidecar = new SidecarDatabase(':memory:');
 
@@ -36,7 +41,10 @@ describe('SidecarDatabase', () => {
 
     const tableNames = tables.map(t => t.name);
 
-    expect(tableNames).toContain('memory_embeddings');
+    // memory_embeddings only exists when sqlite-vec loaded
+    if (sidecar.hasVectorSearch) {
+      expect(tableNames).toContain('memory_embeddings');
+    }
     expect(tableNames).toContain('memory_fts');
     expect(tableNames).toContain('task_graph');
     expect(tableNames).toContain('task_status');

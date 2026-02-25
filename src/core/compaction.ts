@@ -67,6 +67,7 @@ export class CompactionEngine {
   private readonly sidecarDb? : Database;
   private readonly searchIndex? : SearchIndex;
   private readonly summarize? : SummarizeFn;
+  private readonly hasVectorSearch : boolean;
 
   constructor(
     memoryStore : MemoryStore,
@@ -75,6 +76,7 @@ export class CompactionEngine {
       sidecarDb? : Database;
       searchIndex? : SearchIndex;
       summarize? : SummarizeFn;
+      hasVectorSearch? : boolean;
     },
   ) {
     this.memoryStore = memoryStore;
@@ -82,6 +84,7 @@ export class CompactionEngine {
     this.sidecarDb = opts?.sidecarDb;
     this.searchIndex = opts?.searchIndex;
     this.summarize = opts?.summarize;
+    this.hasVectorSearch = opts?.hasVectorSearch ?? true;
   }
 
   // -------------------------------------------------------------------------
@@ -120,7 +123,7 @@ export class CompactionEngine {
   ): Promise<number> {
     const effectiveSummarize = summarize ?? this.summarize;
 
-    if (!this.sidecarDb) {
+    if (!this.sidecarDb || !this.hasVectorSearch) {
       return 0;
     }
     if (!effectiveSummarize) {
