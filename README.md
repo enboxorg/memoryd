@@ -39,7 +39,7 @@ memoryd serve
 # {
 #   "mcpServers": {
 #     "memoryd": {
-#       "url": "http://localhost:3200/sse"
+#       "url": "http://localhost:3200/mcp"
 #     }
 #   }
 # }
