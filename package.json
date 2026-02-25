@@ -57,13 +57,14 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.0.1",
-    "@enbox/agent": "0.2.0",
-    "@enbox/api": "0.3.0",
-    "@enbox/crypto": "0.0.6",
-    "@enbox/dids": "0.0.7",
-    "@enbox/dwn-sdk-js": "0.1.0",
+    "@enbox/agent": "^0.2.1",
+    "@enbox/api": "^0.3.1",
+    "@enbox/crypto": "^0.0.7",
+    "@enbox/dids": "^0.0.8",
+    "@enbox/dwn-sdk-js": "^0.1.1",
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "sqlite-vec": "^0.1.6"
+    "sqlite-vec": "^0.1.6",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.2",

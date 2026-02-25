@@ -2,9 +2,25 @@
 
 // memoryd CLI — command router.
 
+import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+
 import { flagValue, hasFlag } from './flags.js';
 
-const VERSION = '0.0.1';
+function loadVersion(): string {
+  let dir = import.meta.dir;
+  for (let i = 0; i < 5; i++) {
+    try {
+      const raw = readFileSync(join(dir, 'package.json'), 'utf8');
+      return (JSON.parse(raw) as { version: string }).version;
+    } catch {
+      dir = join(dir, '..');
+    }
+  }
+  return '0.0.0';
+}
+
+const VERSION = loadVersion();
 
 function printUsage(): void {
   console.log(`memoryd v${VERSION} — User-owned AI memory layer
