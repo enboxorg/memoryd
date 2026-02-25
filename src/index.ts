@@ -63,3 +63,6 @@ export { registerTaskResources } from './mcp/resources/task-resources.js';
 
 export { registerContextPrompt } from './mcp/prompts/context-prompt.js';
 export { registerPlanPrompt } from './mcp/prompts/plan-prompt.js';
+
+export { resolveConfig } from './config.js';
+export type { MemorydConfig } from './config.js';
