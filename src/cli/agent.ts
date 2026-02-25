@@ -11,7 +11,10 @@
  * @module
  */
 
+import type { CompactionEngine } from '../core/compaction.js';
+import type { EmbeddingProvider } from '../sidecar/embeddings.js';
 import type { GraphEngine } from '../core/graph.js';
+import type { MemorydConfig } from '../config.js';
 import type { MemoryStore } from '../core/memory-store.js';
 import type { SearchIndex } from '../sidecar/search.js';
 import type { SidecarDatabase } from '../sidecar/database.js';
@@ -38,6 +41,15 @@ export type ConnectOptions = {
    * a new vault.  When omitted, a new phrase is generated automatically.
    */
   recoveryPhrase? : string;
+  /**
+   * When true, skip sidecar/search index creation (for commands that
+   * don't need search, like `fact add` or `whoami`).
+   */
+  skipSidecar? : boolean;
+  /**
+   * Runtime config — when omitted, defaults are resolved from env vars.
+   */
+  config? : MemorydConfig;
 };
 
 /** Context returned by `connectAgent()` — provides stores and engines. */
@@ -49,6 +61,8 @@ export type AgentContext = {
   graphEngine : GraphEngine;
   sidecarDb? : SidecarDatabase;
   searchIndex? : SearchIndex;
+  embeddings? : EmbeddingProvider;
+  compaction? : CompactionEngine;
   recoveryPhrase? : string;
 };
 
@@ -143,5 +157,52 @@ export async function connectAgent(options: ConnectOptions): Promise<AgentContex
   const taskStore = new TS(web5);
   const graphEngine = new GE(taskStore);
 
-  return { did, web5, memoryStore, taskStore, graphEngine, recoveryPhrase };
+  // Build the base context.
+  const ctx: AgentContext = { did, web5, memoryStore, taskStore, graphEngine, recoveryPhrase };
+
+  // Optionally bootstrap the sidecar search index.
+  if (!options.skipSidecar) {
+    await bootstrapSidecar(ctx, options.config);
+  }
+
+  return ctx;
+}
+
+// ---------------------------------------------------------------------------
+// Sidecar bootstrap
+// ---------------------------------------------------------------------------
+
+/**
+ * Create the sidecar database, embedding provider, search index, and
+ * compaction engine.  Mutates the given {@link AgentContext} in place.
+ */
+export async function bootstrapSidecar(
+  ctx: AgentContext,
+  config?: MemorydConfig,
+): Promise<void> {
+  const { mkdirSync } = await import('node:fs');
+  const { dirname } = await import('node:path');
+  const { resolveConfig } = await import('../config.js');
+  const { SidecarDatabase: SDB } = await import('../sidecar/database.js');
+  const { SearchIndex: SI } = await import('../sidecar/search.js');
+  const { createEmbeddingProvider } = await import('../sidecar/embeddings.js');
+  const { CompactionEngine: CE } = await import('../core/compaction.js');
+
+  const cfg = config ?? resolveConfig();
+  const provider = createEmbeddingProvider(cfg.embedding);
+
+  // Ensure parent directory exists.
+  mkdirSync(dirname(cfg.sidecarPath), { recursive: true });
+
+  const sidecarDb = new SDB(cfg.sidecarPath, provider.dimensions);
+  const searchIndex = new SI(sidecarDb.db, provider);
+  const compaction = new CE(ctx.memoryStore, ctx.taskStore, {
+    sidecarDb: sidecarDb.db,
+    searchIndex,
+  });
+
+  ctx.sidecarDb = sidecarDb;
+  ctx.searchIndex = searchIndex;
+  ctx.embeddings = provider;
+  ctx.compaction = compaction;
 }

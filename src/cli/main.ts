@@ -19,7 +19,7 @@ Commands:
   auth logout [profile]         Remove a profile
 
   init                          Install protocols and create sidecar DB
-  serve                         Start MCP server (HTTP/SSE)
+  serve [--stdio] [--port N]    Start MCP server (HTTP or stdio)
   whoami                        Print current DID
 
   fact add <content>            Add a fact
@@ -154,7 +154,15 @@ async function main(): Promise<void> {
       break;
     }
     case 'compact': {
-      console.log('Memory compaction is not yet implemented. See Issue #15.');
+      if (!ctx.compaction) {
+        console.error('Compaction requires sidecar. Run `memoryd init` first.');
+        process.exit(1);
+      }
+      console.log('Running compaction...');
+      const result = await ctx.compaction.compact();
+      console.log(`Archived stale: ${result.archivedStale}`);
+      console.log(`Merged duplicates: ${result.mergedDuplicates}`);
+      console.log(`Vacuumed: ${result.vacuumed}`);
       break;
     }
     case 'revoke': {
