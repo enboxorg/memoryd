@@ -61,6 +61,68 @@ describe('mcp install/uninstall', () => {
   });
 
   // -------------------------------------------------------------------------
+  // password in env
+  // -------------------------------------------------------------------------
+
+  describe('password inclusion', () => {
+    const origPassword = process.env.MEMORYD_PASSWORD;
+
+    afterEach(() => {
+      if (origPassword !== undefined) {
+        process.env.MEMORYD_PASSWORD = origPassword;
+      } else {
+        delete process.env.MEMORYD_PASSWORD;
+      }
+    });
+
+    it('includes MEMORYD_PASSWORD in config when set', async () => {
+      process.env.MEMORYD_PASSWORD = 'test-secret';
+      const { mcpCommand } = await import('../../src/cli/commands/mcp.js');
+      const lines = await captureLog(() => mcpCommand(['install', '--print']));
+      const json = JSON.parse(lines.join('\n'));
+      expect(json.mcpServers.memoryd.env.MEMORYD_PASSWORD).toBe('test-secret');
+    });
+
+    it('omits MEMORYD_PASSWORD from config when not set', async () => {
+      delete process.env.MEMORYD_PASSWORD;
+      const { mcpCommand } = await import('../../src/cli/commands/mcp.js');
+      const lines = await captureLog(() => mcpCommand(['install', '--print']));
+      const json = JSON.parse(lines.join('\n'));
+      expect(json.mcpServers.memoryd.env.MEMORYD_PASSWORD).toBeUndefined();
+    });
+
+    it('warns when MEMORYD_PASSWORD is not set after install', async () => {
+      delete process.env.MEMORYD_PASSWORD;
+      const origCwd = process.cwd();
+      const projectDir = join(TEST_DIR, 'pw-warn-project');
+      mkdirSync(projectDir, { recursive: true });
+      process.chdir(projectDir);
+      try {
+        const { mcpCommand } = await import('../../src/cli/commands/mcp.js');
+        const lines = await captureLog(() => mcpCommand(['install', '--scope', 'project']));
+        expect(lines.some(l => l.includes('Warning: MEMORYD_PASSWORD is not set'))).toBe(true);
+      } finally {
+        process.chdir(origCwd);
+      }
+    });
+
+    it('does not warn when MEMORYD_PASSWORD is set', async () => {
+      process.env.MEMORYD_PASSWORD = 'test-secret';
+      const origCwd = process.cwd();
+      const projectDir = join(TEST_DIR, 'pw-nowarn-project');
+      mkdirSync(projectDir, { recursive: true });
+      process.chdir(projectDir);
+      try {
+        const { mcpCommand } = await import('../../src/cli/commands/mcp.js');
+        const lines = await captureLog(() => mcpCommand(['install', '--scope', 'project']));
+        expect(lines.some(l => l.includes('Warning: MEMORYD_PASSWORD is not set'))).toBe(false);
+      } finally {
+        process.chdir(origCwd);
+      }
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // --scope project
   // -------------------------------------------------------------------------
 

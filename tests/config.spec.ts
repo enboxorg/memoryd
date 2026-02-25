@@ -103,4 +103,14 @@ describe('resolveConfig', () => {
     expect(config.port).toBe(5000);
     expect(config.host).toBe('0.0.0.0');
   });
+
+  it('accepts per-profile sidecar path override', () => {
+    const config = resolveConfig({
+      sidecarPath: '/home/user/.enbox/profiles/alice/index.db',
+    });
+    expect(config.sidecarPath).toBe('/home/user/.enbox/profiles/alice/index.db');
+    // Other defaults still apply.
+    expect(config.embedding.provider).toBe('noop');
+    expect(config.port).toBe(3200);
+  });
 });

@@ -153,13 +153,20 @@ async function main(): Promise<void> {
   const passwordFlag = flagValue(rest, '--password');
   const password = await getPassword(passwordFlag);
 
-  const { resolveProfile, profileDataPath } = await import('../profiles/config.js');
+  const { resolveProfile, profileDataPath, profilesDir } = await import('../profiles/config.js');
   const profileFlag = flagValue(rest, '--profile');
   const profileName = resolveProfile(profileFlag);
   const dataPath = profileName ? profileDataPath(profileName) : undefined;
 
+  // Derive a per-profile sidecar path so different identities don't
+  // cross-contaminate the search index.
+  const { resolveConfig } = await import('../config.js');
+  const config = profileName
+    ? resolveConfig({ sidecarPath: join(profilesDir(), profileName, 'index.db') })
+    : resolveConfig();
+
   const { connectAgent } = await import('./agent.js');
-  const ctx = await connectAgent({ password, dataPath });
+  const ctx = await connectAgent({ password, dataPath, config });
   const json = hasFlag(rest, '--json');
 
   switch (command) {

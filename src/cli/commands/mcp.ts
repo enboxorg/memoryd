@@ -19,12 +19,19 @@ import { flagValue, hasFlag } from '../flags.js';
 
 const SERVER_NAME = 'memoryd';
 
-/** The config entry every client receives. */
-const SERVER_ENTRY = {
-  command : SERVER_NAME,
-  args    : ['serve', '--stdio'],
-  env     : {},
-};
+/** Build the config entry, prompting for password if needed. */
+function serverEntry(): Record<string, unknown> {
+  const password = process.env.MEMORYD_PASSWORD;
+  const env: Record<string, string> = {};
+  if (password) {
+    env.MEMORYD_PASSWORD = password;
+  }
+  return {
+    command : SERVER_NAME,
+    args    : ['serve', '--stdio'],
+    env,
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Client definitions
@@ -93,7 +100,7 @@ function writeJsonConfig(path: string, config: McpConfig): void {
 function addServerToConfig(path: string): void {
   const config = readJsonConfig(path);
   config.mcpServers = config.mcpServers ?? {};
-  config.mcpServers[SERVER_NAME] = SERVER_ENTRY;
+  config.mcpServers[SERVER_NAME] = serverEntry();
   writeJsonConfig(path, config);
 }
 
@@ -178,10 +185,26 @@ function uninstallProject(): void {
 function printConfig(): void {
   const config = {
     mcpServers: {
-      [SERVER_NAME]: SERVER_ENTRY,
+      [SERVER_NAME]: serverEntry(),
     },
   };
   console.log(JSON.stringify(config, null, 2));
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Warn if MEMORYD_PASSWORD is not set after install. */
+function warnIfNoPassword(): void {
+  if (!process.env.MEMORYD_PASSWORD) {
+    console.log('');
+    console.log(
+      'Warning: MEMORYD_PASSWORD is not set. Add it to your MCP client\'s env '
+      + 'config or memoryd will prompt for a password on stdin '
+      + '(incompatible with stdio transport).',
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -225,6 +248,7 @@ async function mcpInstall(args: string[]): Promise<void> {
   const scope = flagValue(args, '--scope');
   if (scope === 'project') {
     installProject();
+    warnIfNoPassword();
     return;
   }
 
@@ -241,6 +265,7 @@ async function mcpInstall(args: string[]): Promise<void> {
     }
     client.install();
     console.log(`Installed memoryd in ${client.label}.`);
+    warnIfNoPassword();
     return;
   }
 
@@ -264,6 +289,8 @@ async function mcpInstall(args: string[]): Promise<void> {
       console.error(`Failed to install in ${client.label}: ${msg}`);
     }
   }
+
+  warnIfNoPassword();
 }
 
 // ---------------------------------------------------------------------------
