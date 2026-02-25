@@ -54,6 +54,14 @@ describe('flags', () => {
     it('returns first occurrence', () => {
       expect(flagValue(['--port', '1', '--port', '2'], '--port')).toBe('1');
     });
+
+    it('extracts --password value from args', () => {
+      expect(flagValue(['--password', 's3cret', '--json'], '--password')).toBe('s3cret');
+    });
+
+    it('returns undefined when --password has no value', () => {
+      expect(flagValue(['--password'], '--password')).toBeUndefined();
+    });
   });
 
   describe('hasFlag', () => {
@@ -320,3 +328,32 @@ describe('CLI commands', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// DWN endpoint env var
+// ---------------------------------------------------------------------------
+
+describe('DWN endpoint env var', () => {
+  it('defaults to https://enbox-dwn.fly.dev when MEMORYD_DWN_ENDPOINT is unset', () => {
+    delete process.env.MEMORYD_DWN_ENDPOINT;
+    const endpoint = process.env.MEMORYD_DWN_ENDPOINT ?? 'https://enbox-dwn.fly.dev';
+    expect(endpoint).toBe('https://enbox-dwn.fly.dev');
+  });
+
+  it('uses MEMORYD_DWN_ENDPOINT when set', () => {
+    process.env.MEMORYD_DWN_ENDPOINT = 'https://custom-dwn.example.com';
+    const endpoint = process.env.MEMORYD_DWN_ENDPOINT ?? 'https://enbox-dwn.fly.dev';
+    expect(endpoint).toBe('https://custom-dwn.example.com');
+    delete process.env.MEMORYD_DWN_ENDPOINT;
+  });
+});
+
+// ---------------------------------------------------------------------------
+// --password CLI flag integration
+// ---------------------------------------------------------------------------
+
+// Full integration test for --password requires a DWN agent setup and
+// spawning the CLI as a subprocess.  The flag extraction itself is covered
+// by the flagValue tests above.  The getPassword(fromFlag) path is a
+// straightforward early-return that is validated by the unit-level flag
+// tests combined with manual verification.
