@@ -181,6 +181,54 @@ DWN records ──> JWE encrypted at rest (user's DID keys)
 
 The sidecar never leaves the device. The DWN records are the portable, sovereign data.
 
+## Search Setup
+
+memoryd uses **hybrid search** that combines vector similarity (sqlite-vec) with full-text keyword matching (FTS5) via reciprocal rank fusion. The quality of vector search depends on the configured embedding provider.
+
+Three embedding providers are available, configured via the `MEMORYD_EMBEDDING_PROVIDER` environment variable:
+
+### `noop` (default)
+
+No external dependencies required. Only keyword (FTS5) search produces meaningful results. Vector/semantic search returns arbitrary results because all embeddings are zero vectors.
+
+This is the default so that `memoryd init && memoryd serve` works out of the box without any extra setup, but you will want to switch to a real provider for full hybrid search.
+
+### `ollama` — free, local, private
+
+Requires [Ollama](https://ollama.com) running locally with an embedding model pulled:
+
+```sh
+# Install Ollama: https://ollama.com
+ollama pull nomic-embed-text
+export MEMORYD_EMBEDDING_PROVIDER=ollama
+memoryd serve
+```
+
+The default model is `nomic-embed-text` (768 dimensions). You can override with:
+
+```sh
+export MEMORYD_EMBEDDING_MODEL=<model-name>
+export MEMORYD_EMBEDDING_URL=http://localhost:11434   # default
+export MEMORYD_EMBEDDING_DIMENSIONS=768               # default
+```
+
+### `openai` — cloud-based
+
+Requires an OpenAI API key:
+
+```sh
+export MEMORYD_EMBEDDING_PROVIDER=openai
+export OPENAI_API_KEY=sk-...
+memoryd serve
+```
+
+The default model is `text-embedding-3-small` (1536 dimensions). You can override with:
+
+```sh
+export MEMORYD_EMBEDDING_MODEL=text-embedding-3-large
+export MEMORYD_EMBEDDING_DIMENSIONS=3072
+```
+
 ## Configuration
 
 ```jsonc

@@ -3,6 +3,7 @@
 import type { AgentContext } from '../agent.js';
 
 import { bootstrapSidecar } from '../agent.js';
+import { resolveConfig } from '../../config.js';
 
 export async function initCommand(ctx: AgentContext, _args: string[]): Promise<void> {
   console.log('Initializing memoryd...');
@@ -46,4 +47,11 @@ export async function initCommand(ctx: AgentContext, _args: string[]): Promise<v
   }
 
   console.log('memoryd is ready.');
+
+  const cfg = resolveConfig();
+  if (cfg.embedding.provider === 'noop') {
+    console.log('');
+    console.log('Warning: Using noop embedding provider — semantic search is disabled.');
+    console.log('  Set MEMORYD_EMBEDDING_PROVIDER=ollama or =openai for full hybrid search.');
+  }
 }

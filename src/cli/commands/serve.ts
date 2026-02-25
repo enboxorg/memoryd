@@ -2,6 +2,7 @@
 
 import type { AgentContext } from '../agent.js';
 
+import { resolveConfig } from '../../config.js';
 import { flagValue, hasFlag, parsePort } from '../flags.js';
 
 export async function serveCommand(ctx: AgentContext, args: string[]): Promise<void> {
@@ -42,11 +43,23 @@ export async function serveCommand(ctx: AgentContext, args: string[]): Promise<v
 
   if (useStdio) {
     await server.startStdio();
+    printNoopWarning();
     // stdio transport blocks until the client disconnects.
   } else {
     const { port: actualPort } = await server.startHttp();
     console.log(`memoryd MCP server listening on http://localhost:${actualPort}`);
     console.log(`DID: ${ctx.did}`);
     console.log('Press Ctrl+C to stop.');
+    printNoopWarning();
+  }
+}
+
+/** Print a warning when the noop embedding provider is active. */
+function printNoopWarning(): void {
+  const cfg = resolveConfig();
+  if (cfg.embedding.provider === 'noop') {
+    console.log('');
+    console.log('Warning: Using noop embedding provider — semantic search is disabled.');
+    console.log('  Set MEMORYD_EMBEDDING_PROVIDER=ollama or =openai for full hybrid search.');
   }
 }
