@@ -8,10 +8,10 @@ This document is for AI agents that connect to memoryd as an MCP server. It cove
 
 ```sh
 # Initialize protocols (first time only)
-memoryd init --password <your-password>
+MEMORYD_PASSWORD=your-password memoryd init
 
 # Start the MCP HTTP server
-memoryd serve --port 3200 --password <your-password>
+MEMORYD_PASSWORD=your-password memoryd serve --port 3200
 ```
 
 The server listens on `http://localhost:3200` with two endpoints:
@@ -27,8 +27,10 @@ Add to `claude_desktop_config.json`:
   "mcpServers": {
     "memoryd": {
       "command": "memoryd",
-      "args": ["serve", "--port", "3200", "--password", "your-password"],
-      "env": {}
+      "args": ["serve", "--port", "3200"],
+      "env": {
+        "MEMORYD_PASSWORD": "your-password"
+      }
     }
   }
 }
@@ -55,7 +57,10 @@ Add to `.cursor/mcp.json` in your project root:
   "mcpServers": {
     "memoryd": {
       "command": "memoryd",
-      "args": ["serve", "--port", "3200", "--password", "your-password"]
+      "args": ["serve", "--port", "3200"],
+      "env": {
+        "MEMORYD_PASSWORD": "your-password"
+      }
     }
   }
 }
