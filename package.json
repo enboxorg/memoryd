@@ -1,0 +1,78 @@
+{
+  "name": "@enbox/memoryd",
+  "version": "0.0.1",
+  "description": "User-owned AI memory layer with task graph, built on DWN protocols. MCP server.",
+  "type": "module",
+  "main": "./dist/esm/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "bin": {
+    "memoryd": "./dist/esm/cli/main.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.json",
+    "build": "bun run clean && bun run build:esm",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "test": "bun test .spec.ts",
+    "changeset": "changeset",
+    "version": "changeset version && bun install",
+    "release": "bun run build && changeset publish"
+  },
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "schemas",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js"
+    },
+    "./mcp": {
+      "types": "./dist/types/mcp/index.d.ts",
+      "import": "./dist/esm/mcp/index.js"
+    },
+    "./sidecar": {
+      "types": "./dist/types/sidecar/index.d.ts",
+      "import": "./dist/esm/sidecar/index.js"
+    }
+  },
+  "keywords": [
+    "decentralized",
+    "dwn",
+    "memory",
+    "mcp",
+    "ai",
+    "task-graph",
+    "protocols"
+  ],
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "dependencies": {
+    "@enbox/api": "0.3.0",
+    "@enbox/crypto": "0.0.6",
+    "@enbox/dids": "0.0.7",
+    "@enbox/dwn-sdk-js": "0.1.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "sqlite-vec": "^0.1.6"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/cli": "^2.29.8",
+    "@eslint/js": "9.7.0",
+    "@stylistic/eslint-plugin": "^5.9.0",
+    "@typescript-eslint/eslint-plugin": "8.32.1",
+    "@typescript-eslint/parser": "8.32.1",
+    "bun-types": "latest",
+    "eslint": "9.7.0",
+    "rimraf": "5.0.7",
+    "typescript": "5.5.4"
+  }
+}
