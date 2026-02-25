@@ -45,3 +45,6 @@ export { SidecarDatabase } from './sidecar/database.js';
 
 export { SearchIndex } from './sidecar/search.js';
 export type { IndexRecord, SearchFilters, SearchResult } from './sidecar/search.js';
+
+export { MemorydServer } from './mcp/server.js';
+export type { MemorydServerOptions } from './mcp/server.js';
