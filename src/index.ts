@@ -48,3 +48,5 @@ export type { IndexRecord, SearchFilters, SearchResult } from './sidecar/search.
 
 export { MemorydServer } from './mcp/server.js';
 export type { MemorydServerOptions } from './mcp/server.js';
+
+export { registerMemoryTools } from './mcp/tools/memory-tools.js';
