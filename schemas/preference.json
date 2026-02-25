@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://enbox.org/schemas/memory/preference",
+  "type": "object",
+  "properties": {
+    "content": { "type": "string", "description": "The preference content" },
+    "context": { "type": "string", "description": "Optional context" }
+  },
+  "required": ["content"],
+  "additionalProperties": false
+}

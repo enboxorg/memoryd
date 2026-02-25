@@ -13,7 +13,7 @@ export default [
       parserOptions: {
         ecmaFeatures : { modules: true },
         ecmaVersion  : 'latest',
-        project      : true,
+        project      : './tsconfig.eslint.json',
         tsconfigRootDir: import.meta.dirname,
       },
       globals: {
