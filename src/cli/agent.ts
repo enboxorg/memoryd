@@ -221,10 +221,21 @@ export async function bootstrapSidecar(
   mkdirSync(dirname(cfg.sidecarPath), { recursive: true });
 
   const sidecarDb = new SDB(cfg.sidecarPath, provider.dimensions);
-  const searchIndex = new SI(sidecarDb.db, provider);
+
+  if (!sidecarDb.hasVectorSearch) {
+    console.error(
+      'Warning: sqlite-vec could not be loaded — vector search is disabled.\n'
+      + '  Search will use keyword matching (FTS5) only.\n'
+      + '  This typically happens when the SQLite build lacks dynamic extension loading.\n'
+      + '  Upgrading Bun (bun upgrade) or installing from source may resolve this.',
+    );
+  }
+
+  const searchIndex = new SI(sidecarDb.db, provider, sidecarDb.hasVectorSearch);
   const compaction = new CE(ctx.memoryStore, ctx.taskStore, {
-    sidecarDb: sidecarDb.db,
+    sidecarDb       : sidecarDb.db,
     searchIndex,
+    hasVectorSearch : sidecarDb.hasVectorSearch,
   });
 
   ctx.sidecarDb = sidecarDb;

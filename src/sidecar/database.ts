@@ -2,38 +2,62 @@
 // SidecarDatabase — SQLite lifecycle management for the vector sidecar.
 // ---------------------------------------------------------------------------
 
-import * as sqliteVec from 'sqlite-vec';
 import { Database } from 'bun:sqlite';
 
 export class SidecarDatabase {
   readonly db: Database;
 
+  /**
+   * Whether the sqlite-vec extension loaded successfully.
+   * When `false`, the sidecar operates in FTS-only mode —
+   * keyword search still works, but vector KNN is unavailable.
+   */
+  readonly hasVectorSearch: boolean;
+
   constructor(dbPath: string, dimensions: number = 768) {
     this.db = new Database(dbPath);
-    sqliteVec.load(this.db);
+    this.hasVectorSearch = this.tryLoadVec();
     this.db.exec('PRAGMA journal_mode = WAL;');
     this.createTables(dimensions);
   }
 
-  private createTables(dimensions: number): void {
-    // Vector search (sqlite-vec)
-    // vec0 does not support IF NOT EXISTS; use try/catch for idempotency.
+  /**
+   * Attempt to load the sqlite-vec extension.
+   * Returns `true` on success, `false` when the extension cannot load
+   * (e.g. the SQLite build lacks dynamic extension loading).
+   */
+  private tryLoadVec(): boolean {
     try {
-      this.db.exec(`
-        CREATE VIRTUAL TABLE memory_embeddings USING vec0(
-          embedding float[${dimensions}],
-          +record_id TEXT NOT NULL,
-          +protocol_path TEXT NOT NULL,
-          +content_preview TEXT,
-          +category TEXT,
-          +collection TEXT,
-          +updated_at TEXT NOT NULL
-        );
-      `);
-    } catch (e: unknown) {
-      // Table already exists — safe to ignore.
-      if (!(e instanceof Error) || !e.message.includes('already exists')) {
-        throw e;
+
+      const sqliteVec = require('sqlite-vec') as { load: (db: Database) => void };
+      sqliteVec.load(this.db);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private createTables(dimensions: number): void {
+    // Vector search (sqlite-vec) — only when the extension loaded.
+    if (this.hasVectorSearch) {
+      // vec0 does not support IF NOT EXISTS; use try/catch for idempotency.
+      try {
+        this.db.exec(`
+          CREATE VIRTUAL TABLE memory_embeddings USING vec0(
+            embedding float[${dimensions}],
+            +record_id TEXT NOT NULL,
+            +protocol_path TEXT NOT NULL,
+            +content_preview TEXT,
+            +category TEXT,
+            +collection TEXT,
+            +updated_at TEXT NOT NULL
+          );
+        `);
+      } catch (e: unknown) {
+        // Table already exists — safe to ignore.
+        if (!(e instanceof Error) || !e.message.includes('already exists')) {
+          throw e;
+        }
       }
     }
 

@@ -39,33 +39,45 @@ export type IndexRecord = {
 // ---------------------------------------------------------------------------
 
 export class SearchIndex {
+  /**
+   * When `false`, the sidecar has no vec0 table — vector upserts and
+   * KNN queries are skipped, and search falls back to FTS5-only.
+   */
+  readonly hasVectorSearch: boolean;
+
   constructor(
     private readonly db: Database,
     private readonly embeddings: EmbeddingProvider,
-  ) {}
+    hasVectorSearch: boolean = true,
+  ) {
+    this.hasVectorSearch = hasVectorSearch;
+  }
 
   /** Upsert a record into both vector and FTS indexes. */
   async upsert(record: IndexRecord): Promise<void> {
-    const embedding = await this.embeddings.embed(record.content);
-    const now = new Date().toISOString();
-
     // Delete existing entries for this record_id (if updating)
-    this.db.prepare('DELETE FROM memory_embeddings WHERE record_id = ?').run(record.recordId);
     this.db.prepare('DELETE FROM memory_fts WHERE record_id = ?').run(record.recordId);
 
-    // Insert into vec0
-    this.db.prepare(`
-      INSERT INTO memory_embeddings(embedding, record_id, protocol_path, content_preview, category, collection, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      new Float32Array(embedding),
-      record.recordId,
-      record.protocolPath,
-      record.content.substring(0, 200),
-      record.category ?? null,
-      record.collection ?? null,
-      now,
-    );
+    if (this.hasVectorSearch) {
+      const embedding = await this.embeddings.embed(record.content);
+      const now = new Date().toISOString();
+
+      this.db.prepare('DELETE FROM memory_embeddings WHERE record_id = ?').run(record.recordId);
+
+      // Insert into vec0
+      this.db.prepare(`
+        INSERT INTO memory_embeddings(embedding, record_id, protocol_path, content_preview, category, collection, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        new Float32Array(embedding),
+        record.recordId,
+        record.protocolPath,
+        record.content.substring(0, 200),
+        record.category ?? null,
+        record.collection ?? null,
+        now,
+      );
+    }
 
     // Insert into FTS5
     this.db.prepare(`
@@ -82,7 +94,9 @@ export class SearchIndex {
 
   /** Remove a record from both indexes. */
   remove(recordId: string): void {
-    this.db.prepare('DELETE FROM memory_embeddings WHERE record_id = ?').run(recordId);
+    if (this.hasVectorSearch) {
+      this.db.prepare('DELETE FROM memory_embeddings WHERE record_id = ?').run(recordId);
+    }
     this.db.prepare('DELETE FROM memory_fts WHERE record_id = ?').run(recordId);
   }
 
@@ -94,14 +108,17 @@ export class SearchIndex {
     const limit = opts?.limit ?? 10;
     const k = 60; // RRF constant
 
-    // 1. Vector KNN search
-    const queryEmbedding = await this.embeddings.embed(query);
-    const vectorResults = this.vectorSearch(new Float32Array(queryEmbedding), limit * 2, opts?.filters);
+    // 1. Vector KNN search (when available)
+    let vectorResults: RankedResult[] = [];
+    if (this.hasVectorSearch) {
+      const queryEmbedding = await this.embeddings.embed(query);
+      vectorResults = this.vectorSearch(new Float32Array(queryEmbedding), limit * 2, opts?.filters);
+    }
 
     // 2. FTS5 search
     const ftsResults = this.ftsSearch(query, limit * 2, opts?.filters);
 
-    // 3. Reciprocal Rank Fusion
+    // 3. Reciprocal Rank Fusion (degrades to FTS-only ranking when no vector results)
     const merged = this.reciprocalRankFusion(vectorResults, ftsResults, k);
 
     return merged.slice(0, limit);
