@@ -159,6 +159,23 @@ describe('CLI commands', () => {
       expect(lines.some(l => l.includes('memoryd is ready'))).toBe(true);
       expect(lines.some(l => l.includes('DID:'))).toBe(true);
     });
+
+    it('prints noop embedding warning when provider is noop', async () => {
+      const savedProvider = process.env.MEMORYD_EMBEDDING_PROVIDER;
+      delete process.env.MEMORYD_EMBEDDING_PROVIDER;
+      try {
+        const { initCommand } = await import('../../src/cli/commands/init.js');
+        const lines = await captureLog(() => initCommand(ctx, []));
+        expect(lines.some(l => l.includes('noop embedding provider'))).toBe(true);
+        expect(lines.some(l => l.includes('MEMORYD_EMBEDDING_PROVIDER'))).toBe(true);
+      } finally {
+        if (savedProvider !== undefined) {
+          process.env.MEMORYD_EMBEDDING_PROVIDER = savedProvider;
+        } else {
+          delete process.env.MEMORYD_EMBEDDING_PROVIDER;
+        }
+      }
+    });
   });
 
   // -------------------------------------------------------------------------

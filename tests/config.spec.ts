@@ -42,6 +42,12 @@ describe('resolveConfig', () => {
     expect(config.port).toBe(3200);
   });
 
+  it('defaults to noop embedding provider for warning detection', () => {
+    const config = resolveConfig();
+    expect(config.embedding.provider).toBe('noop');
+    // This is the value checked by CLI commands to print the noop warning.
+  });
+
   it('reads sidecar path from env', () => {
     process.env.MEMORYD_SIDECAR_PATH = '/tmp/test.db';
     const config = resolveConfig();
