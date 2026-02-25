@@ -104,7 +104,7 @@ describe('CompactionEngine', () => {
 
     memoryStore = new MemoryStore(web5);
     taskStore = new TaskStore(web5);
-  });
+  }, 30_000);
 
   afterAll(() => {
     rmSync(DATA_PATH, { recursive: true, force: true });

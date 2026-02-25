@@ -18,6 +18,11 @@ Commands:
   auth use <profile> [--global] Set active profile
   auth logout [profile]         Remove a profile
 
+  mcp install [--client <name>]  Configure MCP client (auto-detect)
+  mcp install --scope project   Write .mcp.json in current directory
+  mcp install --print           Print MCP config JSON
+  mcp uninstall [--client <n>]  Remove memoryd from MCP client
+
   init                          Install protocols and create sidecar DB
   serve [--stdio] [--port N]    Start MCP server (HTTP or stdio)
   whoami                        Print current DID
@@ -116,6 +121,11 @@ async function main(): Promise<void> {
     case 'auth': {
       const { authCommand } = await import('./commands/auth.js');
       await authCommand(null, rest);
+      return;
+    }
+    case 'mcp': {
+      const { mcpCommand } = await import('./commands/mcp.js');
+      await mcpCommand(rest);
       return;
     }
   }

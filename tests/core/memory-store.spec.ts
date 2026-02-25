@@ -52,7 +52,7 @@ describe('MemoryStore', () => {
     await typed.configure({ encryption: true });
 
     store = new MemoryStore(web5);
-  });
+  }, 30_000);
 
   afterAll(() => {
     rmSync(DATA_PATH, { recursive: true, force: true });

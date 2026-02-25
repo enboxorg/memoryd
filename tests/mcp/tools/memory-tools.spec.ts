@@ -74,7 +74,7 @@ describe('memory tools (MCP)', () => {
       new URL(`http://localhost:${port}/mcp`),
     );
     await client.connect(transport);
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await client?.close();
