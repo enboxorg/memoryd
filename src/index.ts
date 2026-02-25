@@ -50,3 +50,4 @@ export { MemorydServer } from './mcp/server.js';
 export type { MemorydServerOptions } from './mcp/server.js';
 
 export { registerMemoryTools } from './mcp/tools/memory-tools.js';
+export { registerTaskTools } from './mcp/tools/task-tools.js';
