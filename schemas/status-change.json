@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://enbox.org/schemas/task-graph/status-change",
+  "type": "object",
+  "properties": {
+    "reason": { "type": "string", "description": "Reason for status change" }
+  },
+  "additionalProperties": false
+}
