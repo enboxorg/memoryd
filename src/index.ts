@@ -22,3 +22,15 @@ export type {
   RelationshipFilters,
   RelationshipRecord,
 } from './core/memory-store.js';
+
+export { TaskStore } from './core/task-store.js';
+export type {
+  DependencyRecord,
+  NoteRecord,
+  StatusChangeRecord,
+  TaskDetail,
+  TaskFilters,
+  TaskListResult,
+  TaskRecord,
+  TaskResult,
+} from './core/task-store.js';
