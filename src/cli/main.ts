@@ -63,11 +63,14 @@ Options:
   --help, -h     Show help
   --version, -v  Show version
   --json         Output as JSON
+  --password     Vault password (overrides MEMORYD_PASSWORD env var)
   --profile      Select identity profile
 `);
 }
 
-async function getPassword(): Promise<string> {
+async function getPassword(fromFlag?: string): Promise<string> {
+  if (fromFlag) { return fromFlag; }
+
   const env = process.env.MEMORYD_PASSWORD;
   if (env) { return env; }
 
@@ -147,7 +150,8 @@ async function main(): Promise<void> {
   }
 
   // Commands that need agent
-  const password = await getPassword();
+  const passwordFlag = flagValue(rest, '--password');
+  const password = await getPassword(passwordFlag);
 
   const { resolveProfile, profileDataPath } = await import('../profiles/config.js');
   const profileFlag = flagValue(rest, '--profile');

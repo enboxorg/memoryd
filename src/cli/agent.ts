@@ -98,6 +98,7 @@ export type AgentContext = {
  */
 export async function connectAgent(options: ConnectOptions): Promise<AgentContext> {
   const { password, dataPath, recoveryPhrase: inputPhrase } = options;
+  const dwnEndpoint = process.env.MEMORYD_DWN_ENDPOINT ?? 'https://enbox-dwn.fly.dev';
 
   let web5: Web5;
   let did: string;
@@ -112,7 +113,7 @@ export async function connectAgent(options: ConnectOptions): Promise<AgentContex
       recoveryPhrase = await agent.initialize({
         password,
         recoveryPhrase : inputPhrase,
-        dwnEndpoints   : ['https://enbox-dwn.fly.dev'],
+        dwnEndpoints   : [dwnEndpoint],
       });
     }
     await agent.start({ password });
@@ -128,7 +129,7 @@ export async function connectAgent(options: ConnectOptions): Promise<AgentContex
           services: [{
             id              : 'dwn',
             type            : 'DecentralizedWebNode',
-            serviceEndpoint : ['https://enbox-dwn.fly.dev'],
+            serviceEndpoint : [dwnEndpoint],
             enc             : '#enc',
             sig             : '#sig',
           }],
